@@ -5,5 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".HomeActivity">
+    <Button
+        android:id="@+id/logoutButton"
+        android:layout_width="@dimen/standard_width"
+        android:layout_height="@dimen/standard_height"
+        android:text="Logout"
+        android:onClick="onLogout"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
