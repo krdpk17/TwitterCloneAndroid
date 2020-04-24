@@ -20,6 +20,11 @@
     <style name="LinkText">
         <item name="android:textColor">@color/blue</item>
     </style>
+    <style name="Heading">
+        <item name="android:textSize">26sp</item>
+        <item name="textInputStyle">@android:style/Theme.DeviceDefault</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
 <!--    <style name="AppTheme.NoActionBar">-->
 <!--        <item name="windowActionBar">false</item>-->
 <!--        <item Name="WindowNoTitle">true</item>-->

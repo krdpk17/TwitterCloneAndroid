@@ -1,22 +1,30 @@
-package com.example.twitterclone
+package com.example.twitterclone.activities
 
 import android.content.Context
 import android.content.Intent
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.multidex.MultiDexApplication
+import com.example.twitterclone.R
+import com.example.twitterclone.util.DATA_USERS
+import com.example.twitterclone.util.User
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.android.synthetic.main.activity_login.*
-import java.lang.Exception
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.android.synthetic.main.activity_signup.*
+import kotlinx.android.synthetic.main.activity_signup.emailET
+import kotlinx.android.synthetic.main.activity_signup.emailITIL
+import kotlinx.android.synthetic.main.activity_signup.passwordET
+import kotlinx.android.synthetic.main.activity_signup.passwordITIL
 
-class LoginActivity : AppCompatActivity() {
+class SignupActivity : AppCompatActivity() {
+
     private val firebaseAuth = FirebaseAuth.getInstance()
+    private val firebaseDB = FirebaseFirestore.getInstance()
 
     private val firebaseAuthListener = FirebaseAuth.AuthStateListener {
         val user = firebaseAuth.currentUser?.uid
@@ -27,13 +35,14 @@ class LoginActivity : AppCompatActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.activity_signup)
+
         setTextChangeListener(emailET, emailITIL)
         setTextChangeListener(passwordET, passwordITIL)
-        loginProgressLayout.setOnTouchListener { v, event ->  true}
+        signupProgressLayout.setOnTouchListener { v, event ->  true}
     }
 
-    fun setTextChangeListener(et:EditText, til:TextInputLayout){
+    fun setTextChangeListener(et: EditText, til: TextInputLayout){
         et.addTextChangedListener(object: TextWatcher {
             override fun afterTextChanged(s: Editable?) {
             }
@@ -47,8 +56,15 @@ class LoginActivity : AppCompatActivity() {
         })
     }
 
-    fun onLogin(v: View){
+    fun onSignup(v: View){
         var proceed = true
+
+        if(usernameET.text.isNullOrEmpty()){
+            usernameITIL.error = "Username is required"
+            usernameITIL.isErrorEnabled = true
+            proceed = false
+        }
+
         if(emailET.text.isNullOrEmpty()){
             emailITIL.error = "Email is required"
             emailITIL.isErrorEnabled = true
@@ -61,25 +77,30 @@ class LoginActivity : AppCompatActivity() {
         }
 
         if(proceed){
-            loginProgressLayout.visibility = View.VISIBLE
-            firebaseAuth.signInWithEmailAndPassword(emailET.text.toString(), passwordET.text.toString())
+            signupProgressLayout.visibility = View.VISIBLE
+            firebaseAuth.createUserWithEmailAndPassword(emailET.text.toString(), passwordET.text.toString())
                 .addOnCompleteListener{ task->
                     if(!task.isSuccessful){
-                        loginProgressLayout.visibility = View.GONE
-                        Toast.makeText(this@LoginActivity, "Login Error: ${task.exception?.localizedMessage}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@SignupActivity, "Singup Error: ${task.exception?.localizedMessage}", Toast.LENGTH_SHORT).show()
                     }
+                    else{
+                        val email = emailET.text.toString()
+                        val name = usernameET.text.toString()
+                        val user = User(email, name, "", arrayListOf(), arrayListOf())
+                        firebaseDB.collection(DATA_USERS).document(firebaseAuth.uid!!).set(user)
+                    }
+                    signupProgressLayout.visibility = View.GONE
                 }
                 .addOnFailureListener{ e:Exception->
                     e.printStackTrace()
-                    loginProgressLayout.visibility = View.GONE
+                    signupProgressLayout.visibility = View.GONE
                 }
 
         }
     }
 
-    fun gotoSignup(v: View){
-        startActivity(SignupActivity.newIntent(this))
-        finish()
+    fun gotoLogin(v:View){
+
     }
 
     override fun onStart() {
@@ -91,9 +112,7 @@ class LoginActivity : AppCompatActivity() {
         super.onStop()
         firebaseAuth.removeAuthStateListener(firebaseAuthListener)
     }
-
     companion object{
-        fun newIntent(context: Context) = Intent(context, LoginActivity::class.java)
+        fun newIntent(context: Context) = Intent(context, SignupActivity::class.java)
     }
-
 }
